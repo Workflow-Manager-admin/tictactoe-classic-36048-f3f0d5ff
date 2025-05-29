@@ -1,16 +1,267 @@
 ---
+const primary = "#ffffff";
+const secondary = "#000000";
+const accent = "#2196f3";
+const emptyBoard = Array(9).fill(null);
 
+let board = [...emptyBoard];
+let currentPlayer = "X";
+let winner = null;
+let isDraw = false;
+
+function calculateWinner(bd) {
+  const lines = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+    [0, 4, 8], [2, 4, 6]             // diagonals
+  ];
+  for (const [a, b, c] of lines) {
+    if (bd[a] && bd[a] === bd[b] && bd[a] === bd[c]) {
+      return bd[a];
+    }
+  }
+  return null;
+}
+
+function checkDraw(bd) {
+  return bd.every(cell => cell !== null);
+}
+
+// PUBLIC_INTERFACE
+function handleCellClick(idx) {
+  if (winner || board[idx]) return;
+  board[idx] = currentPlayer;
+  winner = calculateWinner(board);
+  if (!winner && checkDraw(board)) {
+    isDraw = true;
+  } else if (!winner) {
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+  }
+}
+
+// PUBLIC_INTERFACE
+function handleReset() {
+  board = [...emptyBoard];
+  currentPlayer = "X";
+  winner = null;
+  isDraw = false;
+}
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>TicTacToe Classic</title>
+    <meta name="viewport" content="width=device-width" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: {primary};
+        color: {secondary};
+        font-family: system-ui, sans-serif;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: {primary};
+      }
+      .container {
+        background: {primary};
+        border-radius: 20px;
+        box-shadow: 0 2px 24px 0 #0001;
+        padding: 2rem 2.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-align: center;
+        letter-spacing: 1px;
+      }
+      .turn-indicator {
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin-bottom: 1.2rem;
+        color: {secondary};
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 60px);
+        grid-template-rows: repeat(3, 60px);
+        gap: 10px;
+        margin-bottom: 1.5rem;
+        background: {primary};
+      }
+      .cell {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        border: 2px solid {secondary};
+        border-radius: 10px;
+        background: {primary};
+        color: {secondary};
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.12s;
+      }
+      .cell:active {
+        background: #e9e9e9;
+      }
+      .cell.filled {
+        cursor: default;
+        color: {accent};
+        font-weight: 600;
+      }
+      .game-message {
+        min-height: 24px;
+        color: {accent};
+        font-size: 1.1rem;
+        margin-bottom: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+      .reset-btn {
+        background: {accent};
+        color: {primary};
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 30px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 8px 0 #2196f366;
+        transition: background 0.16s;
+      }
+      .reset-btn:hover, .reset-btn:focus {
+        background: #1976d2;
+      }
+      @media (max-width: 500px) {
+        .container { padding: 0.8rem; }
+        .board { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px);}
+        .cell { width: 44px; height: 44px; font-size: 1.2rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="title">TicTacToe Classic</div>
+      <div class="turn-indicator" id="turn-indicator">
+        {winner 
+          ? '' 
+          : (isDraw 
+            ? ''
+            : `Turn: Player ${currentPlayer}`)}
+      </div>
+      <div class="game-message" id="message">
+        {winner 
+          ? `Player ${winner} Wins!`
+          : (isDraw ? "It's a Draw!" : "")
+        }
+      </div>
+      <div class="board" id="board">
+        {
+          board.map((cell, idx) => (
+            <div
+              class={`cell${cell ? " filled" : ""}`}
+              on:click={() => handleCellClick(idx)}
+              aria-label={`cell ${idx+1}`}
+              tabindex={cell ? -1 : 0}
+            >
+              {cell}
+            </div>
+          ))
+        }
+      </div>
+      <button class="reset-btn" type="button" on:click={handleReset}>
+        Reset Game
+      </button>
+    </main>
+    <script type="module">
+      let board = [...{JSON.stringify(emptyBoard)}];
+      let currentPlayer = "X";
+      let winner = null;
+      let isDraw = false;
+      const boardElem = document.getElementById("board");
+      const turnIndicatorElem = document.getElementById("turn-indicator");
+      const messageElem = document.getElementById("message");
+      function calculateWinner(bd) {
+        const lines = [
+          [0, 1, 2], [3, 4, 5], [6, 7, 8],
+          [0, 3, 6], [1, 4, 7], [2, 5, 8],
+          [0, 4, 8], [2, 4, 6]
+        ];
+        for (const [a, b, c] of lines) {
+          if (bd[a] && bd[a] === bd[b] && bd[a] === bd[c]) return bd[a];
+        }
+        return null;
+      }
+      function checkDraw(bd) {
+        return bd.every(cell => cell !== null);
+      }
+      function updateUI() {
+          Array.from(boardElem.children).forEach((cellEl, idx) => {
+            cellEl.textContent = board[idx] || "";
+            cellEl.className = "cell" + (board[idx] ? " filled" : "");
+            cellEl.setAttribute("tabindex", board[idx] ? -1 : 0);
+          });
+          if (winner) {
+            turnIndicatorElem.textContent = "";
+            messageElem.textContent = `Player ${winner} Wins!`;
+          } else if (isDraw) {
+            turnIndicatorElem.textContent = "";
+            messageElem.textContent = "It's a Draw!";
+          } else {
+            turnIndicatorElem.textContent = `Turn: Player ${currentPlayer}`;
+            messageElem.textContent = "";
+          }
+      }
+      function handleCellClick(idx) {
+        if (winner || board[idx]) return;
+        board[idx] = currentPlayer;
+        winner = calculateWinner(board);
+        if (!winner && checkDraw(board)) {
+          isDraw = true;
+        } else if (!winner) {
+          currentPlayer = currentPlayer === "X" ? "O" : "X";
+        }
+        updateUI();
+      }
+      function handleReset() {
+        board = [...{JSON.stringify(emptyBoard)}];
+        currentPlayer = "X";
+        winner = null;
+        isDraw = false;
+        updateUI();
+      }
+      boardElem.addEventListener("click", (e) => {
+        const cellEl = e.target.closest(".cell");
+        if (!cellEl || !boardElem.contains(cellEl)) return;
+        const idx = Array.from(boardElem.children).indexOf(cellEl);
+        handleCellClick(idx);
+      });
+      boardElem.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          const cellEl = e.target.closest(".cell");
+          if (!cellEl || !boardElem.contains(cellEl)) return;
+          const idx = Array.from(boardElem.children).indexOf(cellEl);
+          handleCellClick(idx);
+        }
+      });
+      document.querySelector(".reset-btn").addEventListener("click", handleReset);
+      // Initialize UI for hydration
+      updateUI();
+    </script>
+  </body>
 </html>
