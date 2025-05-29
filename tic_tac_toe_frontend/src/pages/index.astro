@@ -194,7 +194,7 @@ function handleReset() {
       </button>
     </main>
     <script type="module">
-      let board = [...{JSON.stringify(emptyBoard)}];
+      let board = Array(9).fill(null);
       let currentPlayer = "X";
       let winner = null;
       let isDraw = false;
@@ -244,7 +244,7 @@ function handleReset() {
         updateUI();
       }
       function handleReset() {
-        board = [...{JSON.stringify(emptyBoard)}];
+        board = Array(9).fill(null);
         currentPlayer = "X";
         winner = null;
         isDraw = false;
